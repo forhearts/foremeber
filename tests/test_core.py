@@ -7,12 +7,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pytest
 
-from npc.character import Character, load_all_characters, match_keywords
-from npc.lorebook import LoreEntry, Lorebook, load_lorebook
-from npc.memory import MemorySystem
-from npc.memory_extract import extract_facts, memory_entry
-from npc.memory_prompt import fact_to_memory_line, build_memory_prompt
-from npc.prompt import build_prompt, build_memory_pack
+from remember.character import Character, load_all_characters, match_keywords
+from remember.lorebook import LoreEntry, Lorebook, load_lorebook
+from remember.memory import MemorySystem
+from remember.memory_extract import extract_facts, memory_entry
+from remember.memory_prompt import fact_to_memory_line, build_memory_prompt
+from remember.prompt import build_prompt, build_memory_pack
 
 
 # ---------------- Character ----------------

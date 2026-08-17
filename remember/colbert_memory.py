@@ -4,7 +4,7 @@
 参考官方 colbert-rerank.py：query token 向量 × 文档 token 向量 MaxSim。
 
 用法：
-    from npc.colbert_memory import ColBERTRetriever
+    from remember.colbert_memory import ColBERTRetriever
     retriever = ColBERTRetriever()
     retriever.add("黑森林的狼变异了", "wolf_event_1")
     results = retriever.search("狼有什么危险？", top_k=3)

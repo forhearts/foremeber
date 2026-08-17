@@ -232,7 +232,7 @@ class MemorySystem:
 
         冲突解决：状态永远优先于记忆（规划 6.6）。
         """
-        from npc.memory_extract import memory_entry
+        from remember.memory_extract import memory_entry
         entry = memory_entry(character_id, player_text, npc_text)
         if entry:
             # 价格事实覆盖：同物品已有定价则删旧（只留最新价）

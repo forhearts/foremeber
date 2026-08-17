@@ -23,7 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from npc.character import load_all_characters
+from remember.character import load_all_characters
 
 API_URL = "http://127.0.0.1:8081/v1/chat/completions"
 MODEL = "vanilla-cn-roleplay-0.2.i1-IQ3_S"

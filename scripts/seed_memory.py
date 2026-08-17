@@ -14,9 +14,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from npc.character import load_all_characters
-from npc.lorebook import load_lorebook
-from npc.memory import MemorySystem
+from remember.character import load_all_characters
+from remember.lorebook import load_lorebook
+from remember.memory import MemorySystem
 
 # 每个角色的对话示范（few-shot，让模型学会口吻）
 DIALOG_EXAMPLES = {

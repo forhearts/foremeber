@@ -9,8 +9,8 @@
 """
 from __future__ import annotations
 
-from npc.character import Character, match_keywords
-from npc.lorebook import Lorebook
+from remember.character import Character, match_keywords
+from remember.lorebook import Lorebook
 
 
 def build_prompt(
