@@ -1,0 +1,25 @@
+# 模型权重（大文件，不入库）
+weights/
+*.pth
+*.gguf
+*.safetensors
+
+# 数据/记忆库（运行时生成）
+data/memory.db
+data/sft/*.jsonl
+data/sft/gen_*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# 日志
+*.log
+webui.log
+
+# 系统
+.DS_Store
+Thumbs.db
+data/*.db
