@@ -104,4 +104,4 @@ python -m pytest tests/ -v   # 记忆系统 + 拼装测试（角色数据在 tes
 
 ## 许可证
 
-[MIT License](LICENSE) © 2026 [forhearts](https://github.com/forhearts)（创始人 fylcr）
+[MIT License](LICENSE) © 2026 [forhearts](https://github.com/forhearts)
