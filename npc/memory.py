@@ -22,7 +22,9 @@ import threading
 import time
 from pathlib import Path
 
-from npc.config import PROJECT_ROOT
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 class MemorySystem:

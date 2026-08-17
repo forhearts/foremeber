@@ -9,7 +9,9 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from npc.config import LOREBOCK_DIR
+from pathlib import Path
+
+LOREBOCK_DIR = Path(__file__).resolve().parent.parent / "lorebook"
 
 
 @dataclass

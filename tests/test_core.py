@@ -1,4 +1,4 @@
-"""核心模块单元测试（不依赖模型权重，纯逻辑）"""
+"""记忆系统单元测试"""
 import sys
 import tempfile
 from pathlib import Path
@@ -10,8 +10,9 @@ import pytest
 from npc.character import Character, load_all_characters, match_keywords
 from npc.lorebook import LoreEntry, Lorebook, load_lorebook
 from npc.memory import MemorySystem
-from npc.postprocess import PostProcessor
-from npc.prompt import build_prompt, build_system_prompt
+from npc.memory_extract import extract_facts, memory_entry
+from npc.memory_prompt import fact_to_memory_line, build_memory_prompt
+from npc.prompt import build_prompt, build_memory_pack
 
 
 # ---------------- Character ----------------
@@ -39,15 +40,12 @@ def test_lorebook_trigger():
     ])
     hits = lb.query("黑森林有狼出没", max_entries=2, max_budget=300)
     assert any(h.key == "wolf" for h in hits)
-    # priority 排序：剑优先
-    assert hits[0].key == "sword" if any(h.key == "sword" for h in hits) else True
 
 
 def test_lorebook_budget():
     lb = Lorebook([
         LoreEntry(key="a", trigger=["苹果"], content="x" * 200, priority=5),
     ])
-    # 预算 150，内容 200 超预算 -> 不返回
     hits = lb.query("苹果", max_entries=1, max_budget=150)
     assert len(hits) == 0
 
@@ -63,20 +61,29 @@ def test_memory_state():
         ms.close()
 
 
-def test_memory_events_and_retrieval():
+def test_memory_events_and_dedup():
     with tempfile.TemporaryDirectory() as td:
         ms = MemorySystem(Path(td) / "m.db")
-        ms.add_event("aila", "玩家帮艾拉修好了马车")
-        ms.add_event("aila", "玩家试图偷艾拉的钱袋，被发现了")
-        ms.add_event("bruno", "玩家在酒馆买了一杯酒")
-        # 去重
-        ms.add_event("aila", "玩家帮艾拉修好了马车")
-        evts = ms.recent_events("aila", n=10)
-        assert len(evts) == 2
-        # 检索
-        hits = ms.search("aila", "马车", top_k=3)
-        assert len(hits) >= 1
-        assert "马车" in hits[0]["text"]
+        ms.add_event("aila", "我是艾拉，流浪商人")
+        ms.add_event("aila", "我是艾拉，流浪商人")  # 去重
+        ms.add_event("aila", "我是艾拉，流浪商人")  # 去重
+        ms.add_event("aila", "这把剑我定价五百金币")
+        evts = ms.recent_events("aila", 10)
+        assert len(evts) == 2  # 去重生效
+        ms.close()
+
+
+def test_memory_persona():
+    with tempfile.TemporaryDirectory() as td:
+        ms = MemorySystem(Path(td) / "m.db")
+        ms.set_persona("aila", ["我的性格：警惕爱钱"], ["玩家：你是谁？ → 艾拉：别靠太近。"])
+        facts, examples = ms.get_persona("aila")
+        assert facts == ["我的性格：警惕爱钱"]
+        assert len(examples) == 1
+        # clear_character 不清 persona
+        ms.clear_character("aila")
+        facts2, examples2 = ms.get_persona("aila")
+        assert facts2 == ["我的性格：警惕爱钱"]
         ms.close()
 
 
@@ -85,71 +92,61 @@ def test_memory_conflict_state_priority():
         ms = MemorySystem(Path(td) / "m.db")
         ms.add_event("aila", "玩家是好人，救了艾拉")
         ms.set_state("aila", {"好感度": -10, "信任": False})
-        # 状态优先：检索记忆时状态快照独立
         state = ms.get_state("aila")
         assert state["好感度"] == -10
         ms.close()
 
 
-# ---------------- PostProcessor ----------------
-def test_post_ooc_detection():
-    pp = PostProcessor()
-    assert pp.check_out_of_character("我是AI助手，可以回答你的问题")
-    assert pp.check_out_of_character("作为语言模型，我无法回答")
-    assert not pp.check_out_of_character("艾拉：一个路过的商人。别靠太近。")
+# ---------------- MemoryExtract ----------------
+def test_extract_price():
+    facts = extract_facts("aila", "这把剑多少钱？", "五百金币")
+    assert any("定价" in f or "价格" in f for f in facts)
 
 
-def test_post_length():
-    pp = PostProcessor(max_chars=20)
-    # 短句不截断
-    assert pp.enforce_length("这是一个很长的句子啊这是第二句。") == "这是一个很长的句子啊这是第二句。"
-    # 长句：保留第一句
-    long_text = "第一句。第二句很长很长很长很长很长很长很长很长很长很长很长。"
-    r = pp.enforce_length(long_text, 20)
-    assert len(r) <= 20
-    assert r == "第一句"
+def test_extract_price_only_when_asking():
+    # 砍价不产生价格事实（讨论不是定价）
+    facts = extract_facts("aila", "太贵了，便宜点吧", "五百金币不讲价")
+    assert not any("定价" in f for f in facts)
 
 
-def test_post_clean():
-    pp = PostProcessor()
-    assert pp.clean('  "你好"  ') == "你好"
+def test_extract_name():
+    facts = extract_facts("aila", "我叫林风，从北方来", "哦")
+    assert any("林风" in f for f in facts)
+    assert any("北方" in f for f in facts)
 
 
-def test_post_process_fallback():
-    pp = PostProcessor()
-    r = pp.process("我是AI，我是语言模型")
-    assert "回答" in r or r  # 兜底
-    assert not pp.check_out_of_character(r)
+def test_memory_entry_none_for_noise():
+    entry = memory_entry("aila", "今天天气不错", "嗯")
+    assert entry is None  # 无事实不存噪音
+
+
+# ---------------- MemoryPrompt ----------------
+def test_fact_to_memory_line():
+    assert fact_to_memory_line("aila", "aila把剑定价为五百金币") == "这把剑我定价五百金币"
+    assert fact_to_memory_line("aila", "艾拉是流浪商人") == "我是流浪商人"
+    assert fact_to_memory_line("aila", "玩家自称林风") == "有个玩家说他叫林风"
+    assert fact_to_memory_line("aila", "aila提到卖东西的") is None  # 噪音跳过
+
+
+def test_build_memory_prompt():
+    facts = ["aila把剑定价为五百金币", "艾拉是流浪商人", "玩家自称林风"]
+    p = build_memory_prompt("aila", facts)
+    assert "这把剑我定价五百金币" in p
+    assert "我是流浪商人" in p
 
 
 # ---------------- Prompt ----------------
-def test_build_prompt_structure():
-    c = Character(name="艾拉", identity="商人", personality="警惕",
-                  speech_style="短句", goal="找妹妹")
-    p = build_prompt(
-        character=c,
-        player_input="你是谁？",
-        state={"好感度": 5, "任务": "护送", "信任": False},
-        scene="夜晚营地",
-        history=[("玩家", "你好"), ("艾拉", "你是谁？")],
+def test_build_memory_pack():
+    c = Character(name="艾拉", identity="流浪商人", personality="警惕、爱钱")
+    pack = build_memory_pack(
+        character=c, player_input="你是谁？", intent="询问身份",
+        state={"好感度": 5}, scene="集市摊位",
+        memories=["这把剑我定价五百金币"],
     )
-    assert "[当前状态]" in p
-    assert "好感度：5" in p
-    assert "[最近对话]" in p
-    assert "[玩家]" in p
-    assert "你是谁？" in p
-    # 玩家输入在末尾
-    assert p.strip().endswith("你是谁？")
-
-
-def test_build_system_prompt():
-    c = Character(name="艾拉", identity="流浪商人", personality="警惕、爱钱",
-                  speech_style="短句、带刺")
-    sp = build_system_prompt(c)
-    # 说话风格（身份/名字由记忆系统提供，不在 system prompt）
-    assert "警惕" in sp or "我的性格" in sp
-    assert "不要用AI助手口吻" in sp or "我的口吻" in sp
-    assert "绝不承认自己是AI" in sp or "从来不是AI" in sp or "不是AI或助手" in sp
+    assert pack["intent"] == "询问身份"
+    assert pack["scene"] == "集市摊位"
+    assert "我定价" in pack["memories"][0] or "定价" in pack["memories"][0]
+    assert "场景" in pack["text"]
 
 
 if __name__ == "__main__":

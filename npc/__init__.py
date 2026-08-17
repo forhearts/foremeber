@@ -1,19 +1,18 @@
-"""NPC 角色扮演对话系统核心包"""
-from npc.config import (
-    ModelConfig, GenerationConfig, PROJECT_ROOT,
-    WEIGHTS_DIR, MODEL_DIR, CHARACTERS_DIR, LOREBOCK_DIR,
-    OUT_OF_CHARACTER_PHRASES,
-)
+"""记忆系统核心包（独立，不依赖对话引擎/模型）"""
 from npc.character import Character, load_character, load_all_characters
-from npc.model import load_model
-from npc.lorebook import Lorebook, load_lorebook
-from npc.prompt import build_prompt
+from npc.lorebook import Lorebook, LoreEntry, load_lorebook
+from npc.memory import MemorySystem
+from npc.memory_extract import extract_facts, memory_entry
+from npc.memory_prompt import fact_to_memory_line, build_memory_prompt
+from npc.embedding import EmbeddingClient
+from npc.colbert_memory import ColBERTRetriever
+from npc.encoder_router import EncoderRouter
 
 __all__ = [
-    "ModelConfig", "GenerationConfig",
-    "PROJECT_ROOT", "WEIGHTS_DIR", "MODEL_DIR", "CHARACTERS_DIR", "LOREBOCK_DIR",
-    "OUT_OF_CHARACTER_PHRASES",
     "Character", "load_character", "load_all_characters",
-    "Lorebook", "load_lorebook",
-    "build_prompt",
+    "Lorebook", "LoreEntry", "load_lorebook",
+    "MemorySystem",
+    "extract_facts", "memory_entry",
+    "fact_to_memory_line", "build_memory_prompt",
+    "EmbeddingClient", "ColBERTRetriever", "EncoderRouter",
 ]
