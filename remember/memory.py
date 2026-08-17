@@ -156,7 +156,14 @@ class MemorySystem:
         fp = fingerprint or self._fingerprint(text)
         indexed = self._cjk_bigram(text)
         now = time.time()
+        # 同物品价格覆盖：新定价删除旧定价（只留最新真实价）
+        import re as _re
+        pm = _re.search(r"把(.+?)定价为", text)
         with self._lock:
+            if pm:
+                self.conn.execute(
+                    "DELETE FROM events WHERE character_id=? AND original_text LIKE ?",
+                    (character_id, f"%把{pm.group(1)}定价为%"))
             # 去重：同一指纹不重复写入
             dup = self.conn.execute(
                 "SELECT 1 FROM event_meta WHERE fingerprint = ?", (fp,)

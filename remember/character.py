@@ -76,17 +76,16 @@ def load_character(path: str | Path) -> Character:
 
 
 def load_all_characters(dir_path: str | Path = None) -> dict[str, Character]:
-    """加载目录下所有角色卡，返回 {id: Character}。"""
-    d = Path(dir_path) if dir_path else CHARACTERS_DIR
+    """加载所有角色卡：目录存在则读目录，否则返回空（角色数据由调用方提供）。"""
     result = {}
-    if not d.exists():
-        return result
-    for f in sorted(d.glob("*.json")):
-        try:
-            c = load_character(f)
-            result[c.id] = c
-        except Exception as e:
-            print(f"[warn] 加载角色卡失败 {f.name}: {e}")
+    d = Path(dir_path) if dir_path else CHARACTERS_DIR
+    if d.exists():
+        for f in sorted(d.glob("*.json")):
+            try:
+                c = load_character(f)
+                result[c.id] = c
+            except Exception as e:
+                print(f"[warn] 加载角色卡失败 {f.name}: {e}")
     return result
 
 

@@ -1,6 +1,6 @@
 # ForeMeber — 以记忆为核心的游戏 NPC 对话体系
 
-**remember/**（记忆系统）+ **foremeber.py**（性格+记忆+用户对话 → 接入文字模型）
+**remember/**（记忆系统）+ **foremeber.py**（For 部分：性格+记忆+用户对话 → 接入文字模型）+ **webui.py**（演示）
 
 ## 组成
 
@@ -8,13 +8,17 @@
 |---|---|---|
 | **记忆系统** | `remember/` | 完整记忆系统库（核心） |
 | **For 部分** | `foremeber.py` | 性格+记忆+用户对话拼装 + 接入文字模型（单文件） |
+| **演示** | `webui.py` | Gradio 对话界面 |
 
 ## 快速开始
 
 ```bash
-# 需先启动本地 14B 角色扮演服务（llama.cpp, port 8081）
-python foremeber.py --character aila --scene "集市摊位"    # 单轮
-python foremeber.py --character aila --interactive         # 多轮
+# 1. 需先启动本地 14B 角色扮演服务（llama.cpp, port 8081）
+# 2. 对话演示（WebUI）
+python webui.py
+
+# 3. 命令行对话
+python foremeber.py --character aila --scene "集市摊位"
 ```
 
 ## 拼装结构（foremeber.py）
@@ -47,5 +51,5 @@ user（记忆+对话）:
 ## 测试
 
 ```bash
-python -m pytest tests/ -v   # 记忆系统单元测试
+python -m pytest tests/ -v   # 记忆系统 + 拼装测试（角色数据在 tests/fixtures）
 ```
