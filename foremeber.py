@@ -43,8 +43,10 @@ class ForeMeber:
 
     def __init__(self, memory: MemorySystem | None = None):
         self.mem = memory if memory is not None else MemorySystem()
-        self.chars = load_all_characters()
-        self.lore = load_lorebook()
+        # 角色数据：默认从 tests/fixtures 加载（仓库自带）
+        fixtures = Path(__file__).resolve().parent / "tests" / "fixtures"
+        self.chars = load_all_characters(fixtures / "characters")
+        self.lore = load_lorebook(fixtures / "lorebook")
 
     # ---- 1. 性格（说话风格，persona 常驻）----
     def build_style(self, cid: str, player_input: str = "") -> str:
@@ -66,7 +68,10 @@ class ForeMeber:
     def build_memory(self, cid: str, player_input: str) -> str:
         fixed = self.mem.fixed_memories(cid)      # 身份/背景/目标（第一人称）
         dynamic = self.mem.dynamic_memories(cid, player_input)  # 价格/名字/事件
-        return build_memory_prompt(cid, (fixed + dynamic)[:4])
+        # AI 约束/禁忌类记忆优先（出戏防御关键）
+        taboo = [m for m in fixed if "我不谈论" in m or "禁忌" in m]
+        rest = [m for m in fixed if m not in taboo] + dynamic
+        return build_memory_prompt(cid, (taboo + rest)[:4])
 
     # ---- 3. 用户对话 + 场景 ----
     def build_user(self, cid: str, player_input: str, scene: str = "") -> str:
