@@ -102,6 +102,23 @@ python webui.py --offline
 python -m pytest tests/ -v   # 记忆系统 + 拼装测试（角色数据在 tests/fixtures）
 ```
 
+## 使用的模型与许可
+
+本项目的记忆系统使用 Liquid AI 的 **LFM2.5** 系列模型（语义检索 / 意图粗筛）：
+
+| 模型 | 用途 | 来源 | 许可 |
+|---|---|---|---|
+| **LFM2.5-Embedding-350M** | 语义检索（动态记忆召回） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-Embedding-350M) | LFM Open License v1.0 |
+| **LFM2.5-ColBERT-350M** | 高精度检索（备选） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-ColBERT-350M) | LFM Open License v1.0 |
+| **LFM2.5-Encoder-350M** | 意图粗筛（规则兜底） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-Encoder-350M) | LFM Open License v1.0 |
+
+**LFM Open License v1.0**（详见 [LICENSE_LFM.md](LICENSE_LFM.md)）要点：
+- 非商业/研究用途免费
+- 年收入 ≥ 1000 万美元的实体的商业使用需另行授权（Section 5）
+- 再分发须保留版权声明
+
+> 本项目的**代码**（remember/、foremeber.py 等）遵循 MIT 许可；**LFM 模型权重**遵循其原始 LFM Open License v1.0，两者相互独立。
+
 ## 许可证
 
 [MIT License](LICENSE) © 2026 [forhearts](https://github.com/forhearts)
