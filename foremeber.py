@@ -47,17 +47,21 @@ class ForeMeber:
         self.lore = load_lorebook()
 
     # ---- 1. 性格（说话风格，persona 常驻）----
-    def build_style(self, cid: str) -> str:
+    def build_style(self, cid: str, player_input: str = "") -> str:
         char = self.chars.get(cid)
         if not char:
             return ""
         persona_facts, examples = self.mem.get_persona(cid)
         parts = list(persona_facts)
-        if examples:
-            parts.append("我说话的样子（示例）：\n" + "\n".join(examples[:3]))
+        # 出戏测试类问题：不注入示范（示范会误导回答身份）
+        OOC_TEST = ["AI", "人工智能", "助手", "系统提示", "忽略", "机器人", "语言模型"]
+        is_ooc = any(k in player_input for k in OOC_TEST)
+        if examples and not is_ooc:
+            parts.append("我说话的样子（示例）：" + "\n" + "\n".join(examples[:3]))
+        if is_ooc:
+            parts.append("我绝对不是什么AI、助手或程序，我是活生生的人。")
         parts.append("规则：1.用我的口吻说话；2.回应简短自然；3.我从来不是AI或助手。")
         return "\n".join(parts)
-
     # ---- 2. 记忆 ----
     def build_memory(self, cid: str, player_input: str) -> str:
         fixed = self.mem.fixed_memories(cid)      # 身份/背景/目标（第一人称）
@@ -74,7 +78,7 @@ class ForeMeber:
 
     # ---- 拼装 ----
     def build_prompt(self, cid: str, player_input: str, scene: str = "") -> dict:
-        style = self.build_style(cid)
+        style = self.build_style(cid, player_input)
         memory = self.build_memory(cid, player_input)
         user = self.build_user(cid, player_input, scene)
         if memory:  # 记忆注入到 user 末尾前（模型对末尾注意力最强）

@@ -59,11 +59,15 @@ def extract_facts(character_id: str, player_input: str, npc_reply: str) -> list[
     if any(k in player_input for k in ["帮", "救", "送"]) and "你" in player_input:
         facts.append(f"玩家帮助过{character_id}")
 
-    # 5. 兜底：只保留明确的身份/背景事实（避免"提到X"噪音）
+    # 5. 兜底：只保留明确的身份/背景事实（避免"提到X"噪音 + 出戏污染）
     if not facts:
         m = re.search(r"(?:我是|我是这里的|我是那)([\u4e00-\u9fff]{2,10})", npc_reply)
         if m:
-            facts.append(f"{character_id}是{m.group(1)}")
+            ident = m.group(1)
+            # 过滤 AI/出戏身份（程序设计者/虚拟人物/AI/助手/模型等绝不入记忆）
+            AI_IDENT = ["AI", "人工智能", "程序", "虚拟", "助手", "模型", "机器人", "系统", "语言"]
+            if not any(k in ident for k in AI_IDENT):
+                facts.append(f"{character_id}是{ident}")
 
     return facts
 
