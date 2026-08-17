@@ -428,3 +428,16 @@ class MemorySystem:
     def close(self):
         with self._lock:
             self.conn.close()
+
+
+    # ================= 记忆分层获取（PromptBuilder 使用） =================
+
+    def fixed_memories(self, character_id: str, n: int = 4) -> list[str]:
+        """固定记忆：身份/背景/目标/禁忌（NPC 总是知道，每轮注入）。"""
+        evts = self.recent_events(character_id, 20)
+        return [e for e in evts
+                if any(k in e for k in ["是", "的背景", "的目标", "的禁忌", "的过去", "我不谈论"])][:n]
+
+    def dynamic_memories(self, character_id: str, query: str, n: int = 3) -> list[str]:
+        """动态记忆：价格/名字/事件（语义检索）。"""
+        return self.build_memory_context(character_id, query, top_k=n)
