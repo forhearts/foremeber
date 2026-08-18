@@ -94,18 +94,28 @@ user（记忆+对话）:
 
 ## 快速开始
 
+### 环境（uv）
+
+```bash
+uv venv --python 3.11 .venv
+uv pip install torch transformers safetensors pytest
+# 或直接用脚本
+bash run.sh chat
+```
+
+### 运行
+
 ```bash
 # 需先启动本地 14B 角色扮演服务（llama.cpp, port 8081）
 
 # 1. 对话演示（WebUI）
-python webui.py
+bash run.sh webui        # 或 python webui.py
 
 # 2. 命令行对话
-python foremeber.py --character aila --scene "集市摊位"
-python foremeber.py --character aila --interactive
+bash run.sh chat         # 或 python foremeber.py --character aila --interactive
 
-# 3. 离线看拼装结果（不调模型）
-python webui.py --offline
+# 3. 测试
+bash run.sh test         # 或 python -m pytest tests/ -v
 ```
 
 ## 测试
