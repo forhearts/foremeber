@@ -17,7 +17,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-LLAMA = r"D:\ai-models\llama\llama-server.exe"
+LLAMA = r"D:\ai-models\llama-vulkan\llama-server.exe"  # Vulkan 版
 MODELS = {
     "qwen3-4b": {
         "path": r"D:\ai-models\Qwen3\Qwen3-4B-Q4_K_M.gguf",
