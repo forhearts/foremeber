@@ -63,6 +63,7 @@ user（记忆+对话）:
 |---|---|---|
 | **记忆系统** | `remember/` | 记忆系统库（核心） |
 | **For 部分** | `foremeber.py` | 性格+记忆+用户对话拼装 + 接入文字模型 |
+| **引擎管理** | `engine_server.py` | 一键启动/切换对话引擎（Qwen3-4B/1.7B/vanilla） |
 | **演示** | `webui.py` | Gradio 对话界面（支持 --offline） |
 
 | `remember/` 文件 | 职责 |
@@ -80,7 +81,8 @@ user（记忆+对话）:
 uv venv --python 3.11 .venv
 uv pip install torch transformers safetensors pytest
 
-# 运行（需先启动本地 14B 角色扮演服务, port 8081）
+# 运行（默认 Qwen3-4B 引擎）
+python engine_server.py start qwen3-4b   # 启动对话引擎（或 qwen3-1.7b / vanilla）
 bash run.sh chat    # 命令行对话
 bash run.sh webui   # WebUI 演示
 bash run.sh test    # 测试

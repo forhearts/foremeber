@@ -7,6 +7,7 @@
     reply = fm.chat("aila", "这剑多少钱？", "集市摊位")
 """
 import json
+import os
 import re
 import time
 import urllib.request
@@ -20,8 +21,9 @@ from remember.lorebook import load_lorebook
 from remember.memory import MemorySystem
 from remember.memory_prompt import build_memory_prompt
 
-API_URL = "http://127.0.0.1:8081/v1/chat/completions"
-MODEL = "vanilla-cn-roleplay-0.2.i1-IQ3_S"
+# 引擎配置（可用环境变量覆盖：FMB_URL / FMB_MODEL）
+API_URL = os.environ.get("FMB_URL", "http://127.0.0.1:8085/v1/chat/completions")
+MODEL = os.environ.get("FMB_MODEL", "qwen3-4b")
 
 # 场景 → 活动描述（让 NPC 能回答"你在干什么"）
 SCENE_ACTIVITIES = {
@@ -152,6 +154,11 @@ class ForeMeber:
 def extract_dialogue(raw: str) -> str:
     """从旁白+台词混合输出提取纯台词。"""
     text = raw.strip()
+    # 剥离思考块 <think>...</think>（Qwen3 默认带）
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.S)
+    if "<think" in text:
+        text = text.split(">", 1)[-1] if ">" in text else ""
+    text = text.strip()
     for op, cl in [("\u300c", "\u300d"), ("\u201c", "\u201d"), ("\u300e", "\u300f"), ('"', '"')]:
         quoted = re.findall(rf"{re.escape(op)}([^{re.escape(op)}{re.escape(cl)}]{{2,}}){re.escape(cl)}", text)
         if quoted:
