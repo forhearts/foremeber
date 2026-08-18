@@ -446,5 +446,12 @@ class MemorySystem:
                 if any(k in e for k in ["是", "的背景", "的目标", "的禁忌", "的过去", "我不谈论"])][:n]
 
     def dynamic_memories(self, character_id: str, query: str, n: int = 3) -> list[str]:
-        """动态记忆：价格/名字/事件（语义检索）。"""
+        """动态记忆：价格/名字/事件（语义检索 + 关键词兜底）。"""
+        # 名字/身份类查询：先关键词匹配（"你还记得我名字吗" → 匹配"自称/叫林风"）
+        ID_KW = ["名字", "叫什么", "记得我", "从哪里", "从哪来", "身份", "谁"]
+        if any(k in query for k in ID_KW):
+            evts = self.recent_events(character_id, 20)
+            hits = [e for e in evts if any(k in e for k in ["自称", "叫", "来自", "从"])]
+            if hits:
+                return hits[:n]
         return self.build_memory_context(character_id, query, top_k=n)

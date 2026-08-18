@@ -10,7 +10,7 @@
 
 ```
 玩家输入
-  → 动态记忆语义检索（LFM2.5-Embedding-350M 向量相似度）
+  → 动态记忆语义检索（GTE-multilingual-base 向量相似度）
   → 记忆组装（固定记忆每轮注入 + 检索到的动态记忆）
   → 记忆提示词（数据库事实 → 角色第一人称"你记得：..."）
   → 性格约束（说话风格 + 对话示范）
@@ -58,11 +58,12 @@ user（记忆+对话）:
       - AI 约束/禁忌类记忆优先注入（出戏防御）
 ```
 
-**LFM2.5 在其中的作用**：
-- **Embedding-350M**：把玩家输入和记忆条目编码为向量，语义相似度检索——是"动态记忆召回"的核心（比如"太贵了"能关联到"剑定价五百金币"）
-- **Encoder-350M**：意图粗筛（规则未命中时判断该不该检索记忆）
-- **ColBERT-350M**：备选的更高精度检索（token 级 MaxSim）
-- 三者均使用 **LFM Open License v1.0**（详见 [使用的模型与许可](#使用的模型与许可)）
+**检索模型在其中的作用**：
+- **GTE-multilingual-base**（默认）：把玩家输入和记忆条目编码为向量，语义相似度检索——是"动态记忆召回"的核心（比如"太贵了"能关联到"剑定价五百金币"），实测 4/5 优于其他模型
+- **LFM2.5-Embedding-350M**：备选检索（LFM Open License v1.0）
+- **LFM2.5-Encoder-350M**：意图粗筛（规则未命中时判断该不该检索记忆）
+- **LFM2.5-ColBERT-350M**：备选的更高精度检索（token 级 MaxSim）
+- 名字/身份类查询用**关键词兜底**补齐（语义检索的盲区）
 
 ### 关键设计
 
@@ -119,9 +120,21 @@ python -m pytest tests/ -v   # 记忆系统 + 拼装测试（角色数据在 tes
 
 | 模型 | 用途 | 来源 | 许可 |
 |---|---|---|---|
-| **LFM2.5-Embedding-350M** | 语义检索（动态记忆召回） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-Embedding-350M) | LFM Open License v1.0 |
+| **GTE-multilingual-base** | 语义检索（动态记忆召回，默认） | [HuggingFace](https://huggingface.co/Alibaba-NLP/gte-multilingual-base) | MIT |
+| **LFM2.5-Embedding-350M** | 语义检索（备选） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-Embedding-350M) | LFM Open License v1.0 |
 | **LFM2.5-ColBERT-350M** | 高精度检索（备选） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-ColBERT-350M) | LFM Open License v1.0 |
 | **LFM2.5-Encoder-350M** | 意图粗筛（规则兜底） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-Encoder-350M) | LFM Open License v1.0 |
+
+**检索模型实测对比**（5 个记忆查询，`tests/compare_embeddings.py`）：
+
+| 模型 | 准确率 | 备注 |
+|---|---|---|
+| **GTE-multilingual-base** | **4/5** | 唯一能识别"你是谁→身份"（0.81） |
+| bge-m3 | 3/5 | 分数高但"你是谁/名字"失败 |
+| bge-base-zh-v1.5 | 3/5 | 同上 |
+| LFM2.5-Embedding-350M | 3/5 | 同上 |
+
+> 名字/身份类查询（"你还记得我名字吗"）为语义检索难点，已加**关键词兜底**（匹配"自称/叫/来自"）补齐。
 
 **LFM Open License v1.0**（详见 [LICENSE_LFM.md](LICENSE_LFM.md)）要点：
 - 非商业/研究用途免费

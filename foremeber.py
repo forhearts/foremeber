@@ -42,7 +42,27 @@ class ForeMeber:
     """性格 + 记忆 + 用户对话 → 文字模型。"""
 
     def __init__(self, memory: MemorySystem | None = None):
-        self.mem = memory if memory is not None else MemorySystem()
+        if memory is not None:
+            self.mem = memory
+        else:
+            # 语义检索：优先 GTE-multilingual-base（本地），LFM-Embedding 服务兜底
+            embed_client = None
+            try:
+                from remember.gte_client import GTEClient
+                embed_client = GTEClient()
+                print("[foremeber] 记忆检索: GTE-multilingual-base")
+            except Exception as e:
+                print(f"[foremeber] GTE 加载失败({e})，尝试 LFM-Embedding 服务")
+                try:
+                    from remember.embedding import EmbeddingClient
+                    import urllib.request as _ur
+                    with _ur.urlopen("http://127.0.0.1:8082/health", timeout=3) as r:
+                        if r.status == 200:
+                            embed_client = EmbeddingClient(url="http://127.0.0.1:8082/v1/embeddings")
+                            print("[foremeber] 记忆检索: LFM-Embedding-350M")
+                except Exception:
+                    print("[foremeber] 无语义检索，记忆退化关键词匹配")
+            self.mem = MemorySystem(embed_client=embed_client)
         # 角色数据：默认从 tests/fixtures 加载（仓库自带）
         fixtures = Path(__file__).resolve().parent / "tests" / "fixtures"
         self.chars = load_all_characters(fixtures / "characters")
