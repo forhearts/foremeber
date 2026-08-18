@@ -24,3 +24,4 @@ webui.log
 Thumbs.db
 data/*.db
 memory.db
+embeddinggemma-300m/

@@ -333,10 +333,17 @@ class MemorySystem:
                     if text not in candidates or s > candidates[text]["score"]:
                         candidates[text] = {"score": s, "created": created_map.get(text, time.time())}
         elif self._embed is not None and recent:
-            qvec = self._embed.embed(query)
+            # 支持 is_query 的客户端（Qwen3 查询用指令前缀）
+            try:
+                qvec = self._embed.embed(query, is_query=True)
+            except TypeError:
+                qvec = self._embed.embed(query)
             if qvec:
                 for text, created in recent:
-                    evec = self._embed.embed(text)
+                    try:
+                        evec = self._embed.embed(text)
+                    except TypeError:
+                        evec = self._embed.embed(text)
                     if evec is None:
                         continue
                     sim = self._embed.cosine(qvec, evec)

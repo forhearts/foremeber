@@ -45,14 +45,20 @@ class ForeMeber:
         if memory is not None:
             self.mem = memory
         else:
-            # 语义检索：优先 GTE-multilingual-base（本地），LFM-Embedding 服务兜底
+            # 语义检索：优先 Qwen3-Embedding（实测5/5最优），GTE 次之，LFM 服务兜底
             embed_client = None
             try:
-                from remember.gte_client import GTEClient
-                embed_client = GTEClient()
-                print("[foremeber] 记忆检索: GTE-multilingual-base")
+                from remember.qwen3_client import Qwen3Client
+                embed_client = Qwen3Client()
+                print("[foremeber] 记忆检索: Qwen3-Embedding-0.6B")
             except Exception as e:
-                print(f"[foremeber] GTE 加载失败({e})，尝试 LFM-Embedding 服务")
+                print(f"[foremeber] Qwen3 加载失败({e})，尝试 GTE")
+                try:
+                    from remember.gte_client import GTEClient
+                    embed_client = GTEClient()
+                    print("[foremeber] 记忆检索: GTE-multilingual-base")
+                except Exception as e2:
+                    print(f"[foremeber] GTE 加载失败({e2})，尝试 LFM-Embedding 服务")
                 try:
                     from remember.embedding import EmbeddingClient
                     import urllib.request as _ur
