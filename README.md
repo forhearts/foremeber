@@ -120,8 +120,8 @@ python -m pytest tests/ -v   # 记忆系统 + 拼装测试（角色数据在 tes
 
 | 模型 | 用途 | 来源 | 许可 |
 |---|---|---|---|
-| **GTE-multilingual-base** | 语义检索（动态记忆召回，默认） | [HuggingFace](https://huggingface.co/Alibaba-NLP/gte-multilingual-base) | MIT |
-| **LFM2.5-Embedding-350M** | 语义检索（备选） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-Embedding-350M) | LFM Open License v1.0 |
+| **Qwen3-Embedding-0.6B** | 语义检索（动态记忆召回，默认） | [HuggingFace](https://huggingface.co/Alibaba-NLP/gte-multilingual-base) | MIT |
+| **GTE-multilingual-base** | 语义检索（备选） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-Embedding-350M) | LFM Open License v1.0 |
 | **LFM2.5-ColBERT-350M** | 高精度检索（备选） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-ColBERT-350M) | LFM Open License v1.0 |
 | **LFM2.5-Encoder-350M** | 意图粗筛（规则兜底） | [HuggingFace](https://huggingface.co/LiquidAI/LFM2.5-Encoder-350M) | LFM Open License v1.0 |
 
@@ -129,12 +129,14 @@ python -m pytest tests/ -v   # 记忆系统 + 拼装测试（角色数据在 tes
 
 | 模型 | 准确率 | 备注 |
 |---|---|---|
-| **GTE-multilingual-base** | **4/5** | 唯一能识别"你是谁→身份"（0.81） |
+| **Qwen3-Embedding-0.6B** | **5/5** | 唯一全对，含名字/身份识别（默认） |
+| GTE-multilingual-base | 4/5 | 能识别"你是谁→身份"（0.81） |
 | bge-m3 | 3/5 | 分数高但"你是谁/名字"失败 |
 | bge-base-zh-v1.5 | 3/5 | 同上 |
+| EmbeddingGemma-300M | 3/5 | 同上 |
 | LFM2.5-Embedding-350M | 3/5 | 同上 |
 
-> 名字/身份类查询（"你还记得我名字吗"）为语义检索难点，已加**关键词兜底**（匹配"自称/叫/来自"）补齐。
+> 名字/身份类查询（"你还记得我名字吗"）为语义检索难点，Qwen3 可直接命中；其余模型靠**关键词兜底**（匹配"自称/叫/来自"）补齐。
 
 **LFM Open License v1.0**（详见 [LICENSE_LFM.md](LICENSE_LFM.md)）要点：
 - 非商业/研究用途免费
