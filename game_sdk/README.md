@@ -13,6 +13,12 @@ npc = NPCSystem()   # 自动启动 Qwen3-4B 引擎（Vulkan）
 # 对话
 reply = npc.chat("aila", "这把剑多少钱？", scene="集市摊位")
 
+# 可变游戏文本（事件/描述/系统消息/战斗）
+event = npc.generate("aila", "事件", "狼群袭击村庄", scene="夜晚营地")
+desc = npc.generate("aila", "描述", "月光剑", extra={"物品": "月光剑"})
+msg = npc.generate("aila", "系统消息", "任务完成")
+battle = npc.generate("morgan", "战斗", "与黑狼交战", extra={"敌人": "变异狼"})
+
 # 游戏事件 → 更新状态（好感度/任务）
 npc.set_state("aila", 好感度=50, 任务="护送货物")
 

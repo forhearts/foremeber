@@ -41,8 +41,14 @@ class MyGame:
             elif act == "quest":
                 print("[游戏] 接受任务：护送货物到集市")
                 self.npc.set_state("aila", 任务="护送货物")
+            elif act == "event":
+                print(self.npc.generate("aila", "事件", arg or "商队抵达", scene="集市"))
+            elif act == "desc":
+                print(self.npc.generate("aila", "描述", arg or "月光剑"))
+            elif act == "sys":
+                print(self.npc.generate("aila", "系统消息", arg or "任务完成"))
             else:
-                print("命令: talk <npc> / give <npc> / quest / quit")
+                print("命令: talk <npc> / give <npc> / quest / event <事> / desc <物> / sys <消息> / quit")
 
     def talk(self, cid):
         char = self.npc.chars.get(cid)
