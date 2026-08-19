@@ -1,0 +1,19 @@
+{
+  "name": "奥林",
+  "id": "orin",
+  "identity": "年轻守卫",
+  "personality": "认真负责、有点天真、崇拜骑士",
+  "speech_style": "礼貌、热情、带点稚嫩",
+  "taboos": ["不质疑上级","不熬夜守寺"],
+  "goal": "守护城防，提升技能",
+  "attitude_to_player": "尊敬、友好",
+  "greetings": [
+    "欢迎光临，请系好护甲。",
+    "请检查门禁，我要记录。",
+    "此地无银三百两，请勿私自停留。"
+  ],
+  "keywords": ["守卫", "城防", "巡逻", "护卫"],
+  "background": "新人入伍，崇拜骑士团长，想成为优秀守卫",
+  "backstory_keywords": ["新人", "入伍", "骑士团长"],
+  "memory_budget": 300
+}
