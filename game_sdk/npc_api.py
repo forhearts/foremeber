@@ -232,17 +232,20 @@ class NPCSystem:
     def _extract_by(self, raw, mode="dialogue"):
         if mode == "text":
             text = raw.strip()
-            text = re.sub(r" thinking.*? response", "", text, flags=re.S)
+            # 剥 think 块（两种格式： thinking...response 或 <think>...</think>）
+            text = re.sub("\s*thinking.*?response\s*", "", text, flags=re.S)
+            text = re.sub("<think.*?</think>", "", text, flags=re.S)
             if "<think" in text:
                 text = text.split(">", 1)[-1] if ">" in text else ""
-            # 去掉残留的 response 标签（任意位置的行首）
-            text = re.sub(r"response\s*", "", text, count=1)
+            # 去残留 response 标签
+            text = re.sub("^\s*response\s*", "", text)
             return text.strip()[:200]
         return self._extract(raw)
 
     def _extract(self, raw: str) -> str:
         text = raw.strip()
-        text = re.sub(r" thinking.*? response", "", text, flags=re.S)
+        text = re.sub(r"\s*thinking.*?response\s*", "", text, flags=re.S)
+        text = re.sub(r"<think.*?</think>", "", text, flags=re.S)
         if "<think" in text:
             text = text.split(">", 1)[-1] if ">" in text else ""
         text = text.strip()
