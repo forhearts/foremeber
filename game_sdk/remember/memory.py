@@ -80,6 +80,12 @@ class MemorySystem:
                     examples_json TEXT NOT NULL
                 )
             """)
+            # 世界事件层（剧情/世界发生了什么，独立于对话事实）
+            c.execute("""
+                CREATE VIRTUAL TABLE IF NOT EXISTS world_events USING fts5(
+                    character_id UNINDEXED, event_text, original_text, created_at UNINDEXED
+                )
+            """)
             self.conn.commit()
 
     # ================= 人设/示范层（Persona，不参与检索） =================
@@ -143,6 +149,49 @@ class MemorySystem:
         return text[:max_chars]
 
     # ================= 事件存档（Archival Memory，写） =================
+
+    # ================= 世界事件（剧情/世界记忆，独立于对话事实） =================
+
+    def add_world_event(self, character_id: str, event_text: str):
+        """记录世界事件（剧情发生了什么），独立表，不被对话检索污染。"""
+        text = event_text.strip()
+        if not text:
+            return
+        indexed = self._cjk_bigram(text)
+        now = time.time()
+        with self._lock:
+            self.conn.execute(
+                "INSERT INTO world_events (character_id, event_text, original_text, created_at) VALUES (?, ?, ?, ?)",
+                (character_id, indexed, text, now),
+            )
+            self.conn.commit()
+
+    def recent_world_events(self, character_id: str, n: int = 5) -> list[str]:
+        """最近 N 条世界事件（按时间倒序）。"""
+        with self._lock:
+            rows = self.conn.execute(
+                "SELECT original_text FROM world_events WHERE character_id = ? "
+                "ORDER BY created_at DESC LIMIT ?",
+                (character_id, n),
+            ).fetchall()
+        return [r["original_text"] for r in reversed(rows)]
+
+    def search_world_events(self, character_id: str, query: str, n: int = 3) -> list[str]:
+        """按关键词检索世界事件（剧情相关）。"""
+        terms = self._tokenize(query)
+        if not terms:
+            return []
+        query_bigrams = [t for t in self._cjk_bigram(query).split() if len(t) >= 2]
+        if not query_bigrams:
+            query_bigrams = terms
+        search = " OR ".join(f'"{t}"' for t in query_bigrams[:8])
+        with self._lock:
+            rows = self.conn.execute(
+                "SELECT original_text FROM world_events WHERE character_id = ? "
+                "AND world_events MATCH ? ORDER BY created_at DESC LIMIT ?",
+                (character_id, search, n),
+            ).fetchall()
+        return [r["original_text"] for r in rows]
 
     def add_event(self, character_id: str, event_text: str, fingerprint: str | None = None):
         """写入一条事件到存档。fingerprint 用于去重（可选）。

@@ -21,7 +21,6 @@ from pathlib import Path
 
 SDK_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SDK_DIR))
-sys.path.insert(0, str(SDK_DIR.parent))
 
 from remember.memory import MemorySystem
 from remember.memory_prompt import build_memory_prompt
@@ -60,6 +59,7 @@ TEXT_TEMPLATES = {
         ),
         "extract": "text",
         "remember": False,
+        "world_memory": True,
     },
     # 系统消息：提示/通知
     "系统消息": {
@@ -172,6 +172,11 @@ class NPCSystem:
         taboo = [m for m in fixed if "我不谈论" in m or "禁忌" in m]
         rest = [m for m in fixed if m not in taboo] + dynamic
         mem_line = build_memory_prompt(cid, (taboo + rest)[:4])
+        # 世界事件记忆（剧情发生了什么，独立区块）
+        world_line = ""
+        recent_events = self.mem.recent_world_events(cid, 4)
+        if recent_events:
+            world_line = "；".join(recent_events[-3:])
 
         # 出戏测试不注入示范
         OOC = ["AI", "人工智能", "助手", "系统提示", "忽略", "机器人", "语言模型"]
@@ -184,14 +189,21 @@ class NPCSystem:
             sys_p += "\n我说话的样子（示例）：\n" + "\n".join(examples[:3])
         if is_ooc:
             sys_p += "\n我绝对不是什么AI、助手或程序，我是活生生的人。"
-        sys_p += "\n规则：1.用我的口吻说话；2.回应简短自然；3.我从来不是AI或助手。"
+        sys_p += (
+            "\n规则：1.用我的口吻说话；2.回应简短自然；3.我从来不是AI或助手；"
+            "4.你只知道下面给你的信息，不知道任何其他对话或背景；"
+            "5.玩家问到的没给的信息，按你的性格回应。"
+        )
 
         # 场景 + 记忆 + 玩家输入 + 类型规则
         name = char.name
         act = SCENE_ACTIVITIES.get(scene, scene)
-        user = f"[场景] {act}\n"
+        # 上下文完全由系统提供，模型无历史——显式声明信息边界
+        user = f"【你已知的信息（仅此而已，无其他对话记忆）】\n[场景] {act}\n"
         if mem_line:
             user += f"你记得：{mem_line}\n"
+        if world_line:
+            user += f"[近期事件] {world_line}\n"
         if extra:
             for k, v in extra.items():
                 user += f"[{k}] {v}\n"
@@ -204,11 +216,13 @@ class NPCSystem:
         if not reply or len(reply) < 2:
             reply = "（无回应）"
 
-        # 回存记忆（仅对话类）
-        if tpl.get("remember", True):
+        # 回存记忆
+        if tpl.get("remember", True):  # 对话类 → 对话事实记忆
             entry = memory_entry(cid, player_input, reply)
             if entry:
                 self.mem.add_event(cid, entry)
+        if tpl.get("world_memory"):  # 事件类 → 世界事件记忆（独立表）
+            self.mem.add_world_event(cid, f"[事件] {reply}")
         return reply
 
     def _call(self, sys_p, user_p, temperature=0.7):
